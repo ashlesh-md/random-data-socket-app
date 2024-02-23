@@ -5,7 +5,6 @@ The Random Point Generator App is a mobile application built with React Native t
 ## Demo
 
 https://github.com/ashlesh-md/random-data-socket-app/assets/113172856/452176fd-f6ac-4768-9549-e42f4443229c
-Uploading random_point_socket_app_.mp4…
 
 ## Table of Contents
 
@@ -14,6 +13,7 @@ Uploading random_point_socket_app_.mp4…
 - [Optimization Techniques](#optimization-techniques)
 - [WebSocket Server](#websocket-server)
 - [Installation](#installation)
+- [Screenshots](#screenshots)
 
 ## Introduction
 
@@ -56,7 +56,7 @@ Before you begin, ensure you have the following installed:
 - Node.js: [Download and install Node.js](https://nodejs.org/)
 - npm (Node Package Manager): npm is included with Node.js installation.
 
-### Clone the Repository
+### Running Application
 
 ```bash
 git clone <repository-url>
@@ -65,6 +65,18 @@ cd random-point-generator-app
 
 npm install
 
+node server.js
+
 npm start or npx expo start
 
 ```
+## Screenshots
+![1](https://github.com/ashlesh-md/random-data-socket-app/assets/113172856/9d023412-b84f-46b0-8a34-d24fd31932de)
+![2](https://github.com/ashlesh-md/random-data-socket-app/assets/113172856/6cd207ce-d7ad-402c-9f3e-1259c79c3820)
+![3](https://github.com/ashlesh-md/random-data-socket-app/assets/113172856/e06b6999-62e8-479b-b760-0ba4caf396a8)
+![4](https://github.com/ashlesh-md/random-data-socket-app/assets/113172856/f99dd8d3-d465-455d-9e7f-2f4c55dc7ffa)
+
+
+
+
+
