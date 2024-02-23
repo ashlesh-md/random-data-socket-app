@@ -13,12 +13,7 @@ Uploading random_point_socket_app_.mp4…
 - [Features](#features)
 - [Optimization Techniques](#optimization-techniques)
 - [WebSocket Server](#websocket-server)
-- [Getting Started](#getting-started)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Screenshots](#screenshots)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 
@@ -52,11 +47,24 @@ The Random Point Generator App includes a WebSocket server implemented using Exp
 
 The server code is available in the `server.js` file. It establishes a WebSocket endpoint at `/points` and provides an additional endpoint at `/stop` to stop the WebSocket stream.
 
-## Getting Started
+## Installation
 
-To get started with the Random Point Generator App, follow these steps:
+### Prerequisites
 
-1. Clone the repository:
+Before you begin, ensure you have the following installed:
 
-   ```bash
-   git clone <repository-url>
+- Node.js: [Download and install Node.js](https://nodejs.org/)
+- npm (Node Package Manager): npm is included with Node.js installation.
+
+### Clone the Repository
+
+```bash
+git clone <repository-url>
+
+cd random-point-generator-app
+
+npm install
+
+npm start or npx expo start
+
+```
