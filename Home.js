@@ -1,195 +1,187 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber/native';
-import { View, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { FIREBASE_AUTH } from './FirebaseConfig';
-import SplashScreen from './SplashScreen';
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
+import useControls from "r3f-native-orbitcontrols";
+import { View, Button, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { FIREBASE_AUTH } from "./FirebaseConfig";
+import { useNavigation } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const predefinedColors = [
-  '#3498db',
-  '#2ecc71',
-  '#e74c3c',
-  '#f39c12',
-  '#9b59b6',
-  '#1abc9c',
-  '#d35400',
-  '#c0392b',
-  '#34495e',
-  '#f1c40f',
-];
+const o = new THREE.Object3D();
 
-function getRandomColor() {
-  const randomIndex = Math.floor(Math.random() * predefinedColors.length);
-  return predefinedColors[randomIndex];
-}
+function Graph({ nodesData = [] }) {
+  const ref = useRef();
 
-const MemoizedRoundedShape = React.memo(({ position, scale, color }) => {
-  const mesh = useRef();
+  useEffect(() => {
+    const updateMesh = () => {
+      ref.current.instanceMatrix.needsUpdate = true;
+      ref.current.geometry = ref.current.geometry;
+      ref.current.instanceMatrix = ref.current.instanceMatrix;
+    };
 
-  useFrame(() => {
-    mesh.current.rotation.x += 0.01;
-    mesh.current.rotation.y += 0.01;
-  });
+    nodesData.forEach(({ x, y, z }, i) => {
+      o.position.set(x, y, z);
+      o.updateMatrix();
+      ref.current.setMatrixAt(i, o.matrix);
+    });
+
+    updateMesh();
+  }, [nodesData]);
+
+  const radius =
+    nodesData.length < 10_000
+      ? 0.05
+      : nodesData.length < 1_000_000
+      ? 0.01
+      : 0.001;
 
   return (
-    <mesh position={position} ref={mesh} scale={scale}>
-      <sphereGeometry args={[0.5, 32, 32]} />
-      <meshStandardMaterial color={color} emissive={color} />
-    </mesh>
+    <group>
+      <instancedMesh ref={ref} args={[null, null, nodesData.length]}>
+        <sphereGeometry args={[radius, 16, 16]} />
+        <meshBasicMaterial color="#3498db" />
+      </instancedMesh>
+    </group>
   );
-});
+}
 
-const TopBar = () => (
-  <View style={styles.topBar}></View>
-);
-
-const AppBar = ({ handleLogout }) => (
-  <View style={styles.appBar}>
-    <Text style={styles.appBarTitle}>Random Point Generator</Text>
-    <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-      <Text style={styles.logoutButtonText}>Logout</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-const CanvasComponent = React.memo(({ graphData }) => (
-  <React.Suspense fallback={null}>
-    <Canvas camera={{ position: [0, 0, 15] }} backgroundColor="white">
-      <MemoizedRoundedShape position={[0, 0, 0]} color="#3498db" scale={1} />
-      {graphData.map((point, index) => (
-        <MemoizedRoundedShape key={index} position={[point.x, point.y, point.z]} scale={0.2} color={getRandomColor()} />
-      ))}
-    </Canvas>
-  </React.Suspense>
-));
-
-const BottomBar = ({ stopContinueFlow, isGenerating }) => (
-  <View style={styles.bottomBar}>
-    <TouchableOpacity onPress={stopContinueFlow} style={styles.button}>
-      <Text style={styles.buttonText}>{isGenerating ? 'Stop Flow' : 'Start Flow'}</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-const Home = () => {
-  const navigation = useNavigation();
-  const [graphData, setGraphData] = useState([]);
-  const [isGenerating, setIsGenerating] = useState(true);
-  const [isWebSocketConnecting, setIsWebSocketConnecting] = useState(true);
-  const webSocketRef = useRef(null);
-  const [showSplash, setShowSplash] = useState(true);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setShowSplash(false);
-    }, 5000);
-
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  useEffect(() => {
-    if (isGenerating) {
-      const webSocketUrl = 'ws://192.168.65.73:3000/points';
-      webSocketRef.current = new WebSocket(webSocketUrl);
-
-      webSocketRef.current.onopen = () => {
-        setIsWebSocketConnecting(false);
-      };
-
-      webSocketRef.current.addEventListener('message', (event) => {
-        const receivedData = JSON.parse(event.data);
-        setGraphData((prevGraphData) => [...receivedData].slice(-2000));
-      });
-
-      return () => {
-        webSocketRef.current.close();
-      };
-    }
-  }, [isGenerating]);
-
+const AppBar = ({ navigation, isLogoutRequired }) => {
   const handleLogout = async () => {
     try {
       await FIREBASE_AUTH.signOut();
-      navigation.navigate('Authentication');
+      navigation.navigate("Authentication");
     } catch (error) {
-      console.error('Error during logout:', error.message);
+      console.error("Error during logout:", error.message);
     }
   };
-
-  const stopContinueFlow = () => {
-    setIsGenerating((prevIsGenerating) => !prevIsGenerating);
-    if (webSocketRef.current && isGenerating) {
-      webSocketRef.current.send(JSON.stringify({ type: 'stop' }));
-    }
-  };
-
-  if (showSplash || isWebSocketConnecting || graphData.length === 0) {
-    return (
-      <SplashScreen />
-    );
-  }
 
   return (
-    <>
-      <TopBar />
-      <AppBar handleLogout={handleLogout} />
-      <CanvasComponent graphData={graphData} />
-      <BottomBar stopContinueFlow={stopContinueFlow} isGenerating={isGenerating} />
-    </>
+    <View style={styles.appBar}>
+      <Text style={styles.appBarTitle}>Random Point Generator</Text>
+      {isLogoutRequired && (
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+const Home = () => {
+  const webSocketRef = useRef(null);
+  const [chunks, setChunks] = useState([]);
+  const [OrbitControls, events] = useControls();
+  const [nodesData, setNodesData] = useState([]);
+  const [isWebSocketOpen, setIsWebSocketOpen] = useState(true);
+  const navigation = useNavigation();
+
+  const handleWebSocketMessage = useCallback((event) => {
+    try {
+      const receivedData = JSON.parse(event.data);
+
+      if (Array.isArray(receivedData.dataUpdate)) {
+        setChunks((prevChunks) => [...receivedData.dataUpdate]);
+      } else {
+        console.error(
+          "Invalid message format. Received dataUpdate is not an array."
+        );
+      }
+    } catch (error) {
+      console.error("Error parsing message:", error);
+    }
+  }, []);
+
+  const toggleWebSocket = () => {
+    setIsWebSocketOpen((prevState) => !prevState);
+  };
+
+  useEffect(() => {
+    const setupWebSocket = () => {
+      if (isWebSocketOpen) {
+        const webSocketUrl = "ws://192.168.65.73:3000/points";
+        webSocketRef.current = new WebSocket(webSocketUrl);
+
+        webSocketRef.current.addEventListener(
+          "message",
+          handleWebSocketMessage
+        );
+
+        const cleanupWebSocket = () => {
+          webSocketRef.current.removeEventListener(
+            "message",
+            handleWebSocketMessage
+          );
+          webSocketRef.current.close();
+        };
+
+        return cleanupWebSocket;
+      }
+    };
+
+    const cleanupWebSocket = setupWebSocket();
+    return cleanupWebSocket;
+  }, [isWebSocketOpen, handleWebSocketMessage]);
+
+  useEffect(() => {
+    if (!isWebSocketOpen) return;
+
+    setNodesData((prevData) => [
+      ...prevData,
+      ...chunks.flatMap((chunk) => chunk),
+    ]);
+
+    console.log("data : ", nodesData.length, " chunks : ", chunks.length);
+    if (nodesData.length >= 1_000_000) {
+      navigation.pop();
+      navigation.navigate("Home");
+    }
+  }, [chunks, isWebSocketOpen]);
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <AppBar
+        navigation={navigation}
+        isLogoutRequired={chunks.length <= 5000}
+      />
+      <View style={{ flex: 1 }} {...events}>
+        <Canvas>
+          <OrbitControls minZoom={5} maxZoom={10} enablePan={false} />
+          <Graph nodesData={nodesData} />
+        </Canvas>
+        {chunks.length <= 5000 && (
+          <Button
+            title={isWebSocketOpen ? "Stop Flow" : "Start Flow"}
+            onPress={toggleWebSocket}
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  topBar: {
-    width: '100%',
-    height: 40,
-    backgroundColor: 'transparent'
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   appBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#3498db',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#3498db",
     padding: 10,
-    width: '100%',
+    height: 60,
+    width: "100%",
     zIndex: 1,
   },
   appBarTitle: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   logoutButton: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: "#e74c3c",
     padding: 10,
     borderRadius: 5,
   },
   logoutButtonText: {
-    color: 'white',
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    padding: 10,
-    zIndex: 1,
-  },
-  button: {
-    backgroundColor: '#3498db',
-    padding: 10,
-    borderRadius: 5,
-    width: '50%',
-  },
-  buttonText: {
-    color: 'white',
-    textAlign: 'center',
+    color: "white",
   },
 });
 
