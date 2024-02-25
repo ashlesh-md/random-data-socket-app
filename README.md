@@ -35,9 +35,9 @@ The Random Point Generator App leverages React Native to create an engaging mobi
 
 To ensure optimal performance and maintainable code, the Random Point Generator App incorporates the following optimization techniques:
 
-- **Chunking of data is done and first data are stored as a chunks and then updated that data on the sphereGeometry on the screen.
+- **Chunking** of data is done and first data are stored as a chunks and then updated that data on the sphereGeometry on the screen.
 
-- **instancedMesh is used to created multiple meshes of sphereGeometry.
+- **instancedMesh** is used to created multiple meshes of sphereGeometry.
 
 - **Reusable Components:** The app follows a component-based architecture, promoting the reuse of components across different parts of the application. This enhances maintainability and reduces redundancy.
 
