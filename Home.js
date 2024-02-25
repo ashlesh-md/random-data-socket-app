@@ -133,7 +133,7 @@ const Home = () => {
     ]);
 
     console.log("data : ", nodesData.length, " chunks : ", chunks.length);
-    if (nodesData.length >= 5_000_000) {
+    if (nodesData.length >= 1_000_000) {
       navigation.pop();
       navigation.navigate("Home");
     }
