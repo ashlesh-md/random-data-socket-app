@@ -53,7 +53,7 @@ function stopServer() {
 }
 
 function getYourData() {
-  return Array.from({ length: 1000 }, () => ({
+  return Array.from({ length: 20000 }, () => ({
     x: Math.random() * 10 - 5,
     y: Math.random() * 10 - 5,
     z: Math.random() * 10 - 5,

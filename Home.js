@@ -12,6 +12,7 @@ const o = new THREE.Object3D();
 function Graph({ nodesData = [] }) {
   const ref = useRef();
 
+  // Udate the location of ponit / node when there will be change in nodeData
   useEffect(() => {
     const updateMesh = () => {
       ref.current.instanceMatrix.needsUpdate = true;
@@ -28,12 +29,13 @@ function Graph({ nodesData = [] }) {
     updateMesh();
   }, [nodesData]);
 
+  // Set radius of a point / node as the number of data increases
   const radius =
     nodesData.length < 10_000
       ? 0.05
       : nodesData.length < 1_000_000
       ? 0.01
-      : 0.001;
+      : 0.0005;
 
   return (
     <group>
@@ -131,7 +133,7 @@ const Home = () => {
     ]);
 
     console.log("data : ", nodesData.length, " chunks : ", chunks.length);
-    if (nodesData.length >= 1_000_000) {
+    if (nodesData.length >= 5_000_000) {
       navigation.pop();
       navigation.navigate("Home");
     }
